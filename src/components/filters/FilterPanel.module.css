@@ -1,0 +1,132 @@
+.panel {
+  width: 204px;
+  background: white;
+  border-left: 1px solid var(--border);
+  padding: 14px 12px;
+  overflow-y: auto;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 14px;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 11px;
+  color: var(--warm);
+  cursor: pointer;
+  text-decoration: underline;
+  font-family: var(--font-sans);
+  padding: 0;
+}
+
+.closeBtn:hover { color: var(--terra); }
+
+.section {
+  margin-bottom: 16px;
+}
+
+.label {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--warm);
+  font-weight: 500;
+  margin-bottom: 7px;
+}
+
+.select {
+  width: 100%;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 8px;
+  font-size: 12px;
+  background: var(--cream);
+  color: var(--ink);
+  appearance: auto;
+}
+
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--ink-mid);
+  user-select: none;
+}
+
+.checkRow input {
+  accent-color: var(--terra);
+  width: 13px;
+  height: 13px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.slider {
+  flex: 1;
+  accent-color: var(--terra);
+  cursor: pointer;
+}
+
+.sliderVal {
+  font-size: 11px;
+  color: var(--warm);
+  min-width: 32px;
+  text-align: right;
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.pill {
+  font-size: 11px;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  cursor: pointer;
+  color: var(--ink-mid);
+  background: var(--cream);
+  font-family: var(--font-sans);
+  transition: all 0.12s;
+}
+
+.pill:hover {
+  border-color: var(--terra);
+  color: var(--terra);
+}
+
+.pillOn {
+  background: var(--terra-light);
+  border-color: var(--terra);
+  color: var(--terra);
+}
+
+.stars {
+  display: flex;
+  gap: 3px;
+  margin-top: 4px;
+}

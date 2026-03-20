@@ -1,0 +1,354 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 16px;
+  background: var(--cream);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.weekNav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.weekLabel {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  color: var(--ink);
+  min-width: 160px;
+  text-align: center;
+}
+
+.navBtn {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  height: 32px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 12px;
+  color: var(--ink-mid);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: all 0.12s;
+}
+.navBtn:hover { border-color: #B0A898; background: var(--cream-dark); }
+
+.hint { font-size: 11px; color: var(--warm); }
+
+.content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  padding: 16px;
+  gap: 12px;
+}
+
+.weekCol {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dayCard {
+  background: white;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.dayToday {
+  border-left: 3px solid var(--terra);
+}
+
+.dayHeader {
+  padding: 7px 11px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dayName {
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.todayBadge {
+  font-size: 9px;
+  background: var(--terra);
+  color: white;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.pastBadge {
+  font-size: 9px;
+  background: var(--cream-dark);
+  color: var(--warm);
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.slots {
+  padding: 2px 0;
+}
+
+.slot {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 11px;
+  border-bottom: 1px solid #F0EDE6;
+  font-size: 12px;
+  min-height: 34px;
+}
+
+.slot:last-child {
+  border-bottom: none;
+}
+
+.slotLabel {
+  color: var(--warm);
+  font-size: 11px;
+  min-width: 54px;
+  flex-shrink: 0;
+}
+
+.slotRecipe {
+  flex: 1;
+}
+
+.slotFilled {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.slotEmpty {
+  color: var(--warm);
+  font-style: italic;
+  font-size: 11.5px;
+}
+
+.srvCtrl {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--warm);
+}
+
+.srvBtn {
+  background: none;
+  border: none;
+  color: var(--warm);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 2px;
+  line-height: 1;
+  font-family: var(--font-sans);
+  transition: color 0.1s;
+}
+.srvBtn:hover { color: var(--terra); }
+
+.srvVal {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+  min-width: 16px;
+  text-align: center;
+}
+
+.srvLbl {
+  font-size: 11px;
+  color: var(--warm);
+}
+
+.srvLockedLbl {
+  font-size: 11px;
+  color: var(--warm);
+  margin-left: auto;
+}
+
+.clearBtn {
+  background: none;
+  border: none;
+  color: rgba(194,106,69,0.4);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.1s;
+}
+.clearBtn:hover { color: var(--terra); }
+
+/* Shopping list */
+.shopCol {
+  width: 210px;
+  background: white;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  padding: 12px;
+  overflow-y: auto;
+  flex-shrink: 0;
+  align-self: flex-start;
+  max-height: 100%;
+}
+
+.shopHeader {
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shopCount {
+  font-size: 10px;
+  color: var(--warm);
+  font-weight: 400;
+}
+
+.shopEmpty {
+  font-size: 12px;
+  color: var(--warm);
+  font-style: italic;
+  text-align: center;
+  padding: 16px 0;
+  line-height: 1.5;
+}
+
+.shopItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 4px 0;
+  font-size: 12px;
+  border-bottom: 1px solid #F5F2EC;
+}
+.shopItem:last-child { border-bottom: none; }
+
+.shopAmt {
+  color: var(--terra);
+  font-size: 11px;
+  min-width: 52px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+/* Recipe picker modal */
+.pickerBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(44,36,32,0.42);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pickerModal {
+  background: white;
+  border-radius: var(--radius-xl);
+  width: 460px;
+  max-height: 500px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+}
+
+.pickerHeader {
+  padding: 14px 16px 11px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-serif);
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.pickerClose {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: var(--warm);
+}
+
+.pickerSearch {
+  padding: 9px 13px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.pickerSearch input {
+  width: 100%;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 10px;
+  font-size: 12.5px;
+}
+
+.pickerList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+
+.pickerItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.pickerItem:hover { background: var(--cream); }
+
+.pickerEmoji {
+  font-size: 22px;
+  width: 32px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.pickerName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.pickerMeta {
+  font-size: 11px;
+  color: var(--warm);
+  margin-top: 1px;
+}
+
+.pickerEmpty {
+  font-size: 12px;
+  color: var(--warm);
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+}

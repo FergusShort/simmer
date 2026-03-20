@@ -1,1 +1,12 @@
 node_modules/
+src-tauri/target/
+src-tauri/.cargo/
+src-tauri/.vscode/
+src-tauri/.idea/
+src-tauri/.DS_Store
+src-tauri/.env
+src-tauri/.env.local
+src-tauri/.env.development
+src-tauri/.env.production
+src-tauri/.env.test
+src-tauri/.env.*.local      
