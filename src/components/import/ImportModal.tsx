@@ -11,6 +11,8 @@ const PROMPT = `Convert the following recipe into this exact format. Fill every 
 - Use NZ ingredient names where relevant (e.g. "capsicum" not "bell pepper", "courgette" not "zucchini", "coriander" not "cilantro")
 - Seasons are reversed from the northern hemisphere
 Output clean Markdown only — no commentary, no preamble.
+- ALSO DOUBLE CHECK THE PRICES — I know AI can be very wrong on this, so if it seems way off, adjust it to be more in line with typical NZ prices.
+- ALSO MAKE SURE YOU PUT THE STUFF JUST LIKE BELOW E.G PUT THE COPY INTO A CODE BLOCK, AND USE THE SAME HEADERS AND FORMAT, OTHERWISE THE APP WON'T BE ABLE TO PARSE IT!
 
 ---
 name: [Recipe name]
