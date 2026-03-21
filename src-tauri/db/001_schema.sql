@@ -94,7 +94,10 @@ CREATE TABLE IF NOT EXISTS meal_plan (
   meal_slot   TEXT NOT NULL,
   recipe_id   TEXT REFERENCES recipes(id) ON DELETE SET NULL,
   servings    INTEGER DEFAULT 1,
-  notes       TEXT DEFAULT ''
+  notes       TEXT DEFAULT '',
+  include_in_shopping_list INTEGER DEFAULT 1,
+  sort_order  INTEGER DEFAULT 0,
+  created_at  TEXT DEFAULT (datetime('now'))
 );
 
 -- Seed default collections

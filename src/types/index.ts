@@ -82,7 +82,9 @@ export interface MealPlanEntry {
   recipe_id: string | null;
   servings: number;
   notes: string;
-  recipe?: Recipe;
+  include_in_shopping_list: boolean;
+  sort_order: number;
+  created_at?: string;
 }
 
 export type MealSlot = 'Breakfast' | 'Lunch' | 'Dinner';
