@@ -10,18 +10,46 @@ export default function LibraryView() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const filtered = useFilteredRecipes();
 
+  const activeRecipes = useMemo(
+    () => recipes.filter(r => !r.is_archived),
+    [recipes]
+  );
+
   const allCuisines = useMemo(
-    () => [...new Set(recipes.map(r => r.cuisine).filter(Boolean))].sort(),
-    [recipes]
+    () =>
+      [...new Set(
+        activeRecipes
+          .map(r => (r.cuisine || "").trim())
+          .filter(Boolean)
+      )].sort((a, b) => a.localeCompare(b)),
+    [activeRecipes]
   );
+
   const allTags = useMemo(
-    () => [...new Set(recipes.flatMap(r => r.tags || []))].sort(),
-    [recipes]
+    () =>
+      [...new Set(
+        activeRecipes
+          .flatMap(r => r.tags || [])
+          .map(t => t.trim())
+          .filter(Boolean)
+      )].sort((a, b) => a.localeCompare(b)),
+    [activeRecipes]
   );
+
   const maxTime = useMemo(
-    () => Math.max(...recipes.map(r => r.total_time), 30),
-    [recipes]
+    () => Math.max(...activeRecipes.map(r => Number(r.total_time) || 0), 30),
+    [activeRecipes]
   );
+
+  const timeChipValue = useMemo(() => {
+    const raw = Number(filters.maxTime);
+
+    if (!Number.isFinite(raw)) return maxTime;
+    if (raw < 0) return 0;
+    if (raw > maxTime) return maxTime;
+
+    return Math.round(raw);
+  }, [filters.maxTime, maxTime]);
 
   // Active filter chips
   const chips: { label: string; key: string }[] = [];
@@ -34,7 +62,7 @@ export default function LibraryView() {
   if (filters.isSpicy) chips.push({ label: "Spicy", key: "isSpicy" });
   if (filters.isFavouritesOnly) chips.push({ label: "Favourites", key: "isFavouritesOnly" });
   if (filters.isQuick) chips.push({ label: "Quick", key: "isQuick" });
-  if (filters.maxTime < 100) chips.push({ label: `≤${Math.round((filters.maxTime / 100) * maxTime)}m`, key: "maxTime" });
+  if (timeChipValue < maxTime) chips.push({ label: `≤${timeChipValue}m`, key: "maxTime" });
   if (filters.minRating > 0) chips.push({ label: `${"★".repeat(filters.minRating)}+`, key: "minRating" });
   filters.cuisines.forEach(c => chips.push({ label: c, key: `cuisine:${c}` }));
   filters.tags.forEach(t => chips.push({ label: `#${t}`, key: `tag:${t}` }));
@@ -45,7 +73,7 @@ export default function LibraryView() {
     } else if (key.startsWith("tag:")) {
       setFilter("tags", filters.tags.filter(t => t !== key.slice(4)));
     } else if (key === "maxTime") {
-      setFilter("maxTime", 100);
+      setFilter("maxTime", Number.MAX_SAFE_INTEGER);
     } else if (key === "minRating") {
       setFilter("minRating", 0);
     } else {
@@ -55,7 +83,6 @@ export default function LibraryView() {
 
   return (
     <div className={styles.wrap}>
-      {/* Top bar */}
       <div className={styles.topbar}>
         <div className={styles.searchWrap}>
           <span className={styles.searchIcon}>🔍</span>
@@ -67,17 +94,26 @@ export default function LibraryView() {
             onChange={e => setFilter("search", e.target.value)}
           />
         </div>
+
         <div className={styles.vtog}>
           <button
+            type="button"
             className={`${styles.vb} ${viewMode === "grid" ? styles.vbOn : ""}`}
             onClick={() => setViewMode("grid")}
-          >⊞</button>
+          >
+            ⊞
+          </button>
           <button
+            type="button"
             className={`${styles.vb} ${viewMode === "list" ? styles.vbOn : ""}`}
             onClick={() => setViewMode("list")}
-          >☰</button>
+          >
+            ☰
+          </button>
         </div>
+
         <button
+          type="button"
           className={`${styles.filterBtn} ${showFilters ? styles.filterBtnOn : ""}`}
           onClick={() => setShowFilters(v => !v)}
         >
@@ -85,24 +121,28 @@ export default function LibraryView() {
         </button>
       </div>
 
-      {/* Active filter chips */}
       {chips.length > 0 && (
         <div className={styles.chipsRow}>
           {chips.map(c => (
             <span key={c.key} className={styles.chip}>
               {c.label}
-              <button className={styles.chipX} onClick={() => removeChip(c.key)}>×</button>
+              <button type="button" className={styles.chipX} onClick={() => removeChip(c.key)}>
+                ×
+              </button>
             </span>
           ))}
-          <button className={styles.clearAll} onClick={clearFilters}>Clear all</button>
+          <button type="button" className={styles.clearAll} onClick={clearFilters}>
+            Clear all
+          </button>
         </div>
       )}
 
-      {/* Content + filter panel */}
       <div className={styles.content}>
         <div className={styles.recipeArea}>
           <div className={styles.resultHeader}>
-            <span className={styles.count}>{filtered.length} recipe{filtered.length !== 1 ? "s" : ""}</span>
+            <span className={styles.count}>
+              {filtered.length} recipe{filtered.length !== 1 ? "s" : ""}
+            </span>
           </div>
 
           {filtered.length === 0 ? (
@@ -115,7 +155,7 @@ export default function LibraryView() {
                   : "Try clearing some filters."}
               </div>
               {chips.length > 0 && (
-                <button className={styles.clearFiltersBtn} onClick={clearFilters}>
+                <button type="button" className={styles.clearFiltersBtn} onClick={clearFilters}>
                   Clear filters
                 </button>
               )}

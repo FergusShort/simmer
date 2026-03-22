@@ -6,6 +6,7 @@ let _db: Database | null = null;
 export async function getDb(): Promise<Database> {
   if (!_db) {
     _db = await Database.load("sqlite:simmer.db");
+    await _db.execute("PRAGMA foreign_keys = ON");
     await migrate(_db);
   }
   return _db;
@@ -255,7 +256,10 @@ export async function saveRecipe(recipe: Partial<Recipe> & { id?: string }): Pro
   }
 
   await db.execute("DELETE FROM recipe_tags WHERE recipe_id = ?", [id]);
-  for (const tagName of recipe.tags || []) {
+  for (const rawTagName of recipe.tags || []) {
+    const tagName = rawTagName.trim();
+    if (!tagName) continue;
+
     const tagRow = await db.select<{ id: string }[]>("SELECT id FROM tags WHERE name = ?", [tagName]);
 
     let tagId: string;
@@ -271,6 +275,8 @@ export async function saveRecipe(recipe: Partial<Recipe> & { id?: string }): Pro
       [id, tagId]
     );
   }
+
+  await db.execute("DELETE FROM tags WHERE id NOT IN (SELECT DISTINCT tag_id FROM recipe_tags)");
 
   const [saved] = await db.select<any[]>("SELECT * FROM recipes WHERE id = ?", [id]);
   const ingredients = await db.select<Ingredient[]>(
@@ -316,7 +322,12 @@ export async function saveRecipe(recipe: Partial<Recipe> & { id?: string }): Pro
 
 export async function deleteRecipe(id: string): Promise<void> {
   const db = await getDb();
+
+  // ON DELETE CASCADE / SET NULL handles the linked rows for us
   await db.execute("DELETE FROM recipes WHERE id = ?", [id]);
+
+  // Clean up tags that are no longer used by any recipe
+  await db.execute("DELETE FROM tags WHERE id NOT IN (SELECT DISTINCT tag_id FROM recipe_tags)");
 }
 
 export async function toggleFavorite(id: string, val: boolean): Promise<void> {
@@ -472,7 +483,7 @@ export async function updateMealPlanItem(
   id: string,
   patch: Partial<Pick<MealPlanEntry, "recipe_id" | "servings" | "notes" | "include_in_shopping_list" | "sort_order">>
 ): Promise<void> {
-  const db = await getDb(); 
+  const db = await getDb();
 
   const sets: string[] = [];
   const params: any[] = [];

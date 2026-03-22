@@ -6,20 +6,20 @@ import {
   MealPlanEntry,
 } from "@/types";
 import {
-  loadAllRecipes,
-  saveRecipe,
-  deleteRecipe,
-  toggleFavorite,
-  toggleArchive,
-  addCookLog,
-  loadCollections,
-  createCollection,
-  setRecipeCollection,
-  loadMealPlan,
-  setMealSlot,
-  addMealPlanItem,
-  updateMealPlanItem,
-  removeMealPlanItem,
+  loadAllRecipes as dbLoadAllRecipes,
+  saveRecipe as dbSaveRecipe,
+  deleteRecipe as dbDeleteRecipe,
+  toggleFavorite as dbToggleFavorite,
+  toggleArchive as dbToggleArchive,
+  addCookLog as dbAddCookLog,
+  loadCollections as dbLoadCollections,
+  createCollection as dbCreateCollection,
+  setRecipeCollection as dbSetRecipeCollection,
+  loadMealPlan as dbLoadMealPlan,
+  setMealSlot as dbSetMealSlot,
+  addMealPlanItem as dbAddMealPlanItem,
+  updateMealPlanItem as dbUpdateMealPlanItem,
+  removeMealPlanItem as dbRemoveMealPlanItem,
 } from "@/lib/db";
 import { getWeekStart, nextCollectionColor } from "@/lib/utils";
 
@@ -89,7 +89,7 @@ const DEFAULT_FILTERS: FilterState = {
   isFavouritesOnly: false,
   isQuick: false,
   showArchived: false,
-  maxTime: 100,
+  maxTime: Number.MAX_SAFE_INTEGER,
   minRating: 0,
   cuisines: [],
   tags: [],
@@ -103,7 +103,7 @@ export const useStore = create<AppState>((set, get) => ({
   selectedRecipeId: null,
   view: "library",
   sidebarSection: "all",
-  filters: DEFAULT_FILTERS,
+  filters: { ...DEFAULT_FILTERS },
   plannerWeekOffset: 0,
   isLoading: true,
   detailOpen: false,
@@ -114,45 +114,65 @@ export const useStore = create<AppState>((set, get) => ({
   collPickOpen: false,
 
   init: async () => {
-    set({ isLoading: true });
+    set({
+      isLoading: true,
+      filters: { ...DEFAULT_FILTERS },
+      sidebarSection: "all",
+      view: "library",
+    });
+
     const [recipes, collections] = await Promise.all([
-      loadAllRecipes(),
-      loadCollections(),
+      dbLoadAllRecipes(),
+      dbLoadCollections(),
     ]);
+
     set({ recipes, collections, isLoading: false });
     await get().loadWeekPlan();
   },
 
   saveRecipe: async (recipe) => {
-    const saved = await saveRecipe(recipe);
+    const saved = await dbSaveRecipe(recipe);
+
     set((s) => {
       const existing = s.recipes.findIndex((r) => r.id === saved.id);
+
       if (existing >= 0) {
         const updated = [...s.recipes];
         updated[existing] = saved;
         return { recipes: updated };
       }
+
       return { recipes: [saved, ...s.recipes] };
     });
 
-    const collections = await loadCollections();
+    const collections = await dbLoadCollections();
     set({ collections });
   },
 
   deleteRecipe: async (id) => {
-    await deleteRecipe(id);
+    await dbDeleteRecipe(id);
+    const collections = await dbLoadCollections();
+
     set((s) => ({
       recipes: s.recipes.filter((r) => r.id !== id),
+      collections,
+      mealPlan: s.mealPlan.map((item) =>
+        item.recipe_id === id ? { ...item, recipe_id: null } : item
+      ),
       detailOpen: s.selectedRecipeId === id ? false : s.detailOpen,
       selectedRecipeId: s.selectedRecipeId === id ? null : s.selectedRecipeId,
+      editOpen: s.editingId === id ? false : s.editOpen,
+      editingId: s.editingId === id ? null : s.editingId,
     }));
   },
 
   toggleFavorite: async (id) => {
     const recipe = get().recipes.find((r) => r.id === id);
     if (!recipe) return;
+
     const newVal = !recipe.is_favorite;
-    await toggleFavorite(id, newVal);
+    await dbToggleFavorite(id, newVal);
+
     set((s) => ({
       recipes: s.recipes.map((r) =>
         r.id === id ? { ...r, is_favorite: newVal } : r
@@ -163,8 +183,10 @@ export const useStore = create<AppState>((set, get) => ({
   toggleArchive: async (id) => {
     const recipe = get().recipes.find((r) => r.id === id);
     if (!recipe) return;
+
     const newVal = !recipe.is_archived;
-    await toggleArchive(id, newVal);
+    await dbToggleArchive(id, newVal);
+
     set((s) => ({
       recipes: s.recipes.map((r) =>
         r.id === id ? { ...r, is_archived: newVal } : r
@@ -186,12 +208,16 @@ export const useStore = create<AppState>((set, get) => ({
       collections: [],
     };
 
-    const saved = await saveRecipe(copy);
+    const saved = await dbSaveRecipe(copy);
     set((s) => ({ recipes: [saved, ...s.recipes] }));
+
+    const collections = await dbLoadCollections();
+    set({ collections });
   },
 
   addCookLog: async (recipeId, rating, notes) => {
-    const entry = await addCookLog(recipeId, rating, notes);
+    const entry = await dbAddCookLog(recipeId, rating, notes);
+
     set((s) => ({
       recipes: s.recipes.map((r) =>
         r.id === recipeId
@@ -203,12 +229,13 @@ export const useStore = create<AppState>((set, get) => ({
 
   createCollection: async (name) => {
     const color = nextCollectionColor(get().collections.length);
-    const coll = await createCollection(name, color);
+    const coll = await dbCreateCollection(name, color);
     set((s) => ({ collections: [...s.collections, coll] }));
   },
 
   toggleRecipeCollection: async (recipeId, collId, inColl) => {
-    await setRecipeCollection(recipeId, collId, inColl);
+    await dbSetRecipeCollection(recipeId, collId, inColl);
+
     set((s) => ({
       recipes: s.recipes.map((r) =>
         r.id === recipeId
@@ -222,7 +249,7 @@ export const useStore = create<AppState>((set, get) => ({
       ),
       collections: s.collections.map((c) =>
         c.id === collId
-          ? { ...c, recipe_count: (c.recipe_count || 0) + (inColl ? 1 : -1) }
+          ? { ...c, recipe_count: Math.max(0, (c.recipe_count || 0) + (inColl ? 1 : -1)) }
           : c
       ),
     }));
@@ -230,30 +257,30 @@ export const useStore = create<AppState>((set, get) => ({
 
   setMealSlot: async (dayOfWeek, slot, recipeId, servings) => {
     const weekStart = getWeekStart(get().plannerWeekOffset);
-    await setMealSlot(weekStart, dayOfWeek, slot, recipeId, servings);
+    await dbSetMealSlot(weekStart, dayOfWeek, slot, recipeId, servings);
     await get().loadWeekPlan(get().plannerWeekOffset);
   },
 
   addMealPlanItem: async (dayOfWeek, slot, recipeId, servings) => {
     const weekStart = getWeekStart(get().plannerWeekOffset);
-    await addMealPlanItem(weekStart, dayOfWeek, slot, recipeId, servings);
+    await dbAddMealPlanItem(weekStart, dayOfWeek, slot, recipeId, servings);
     await get().loadWeekPlan(get().plannerWeekOffset);
   },
 
   updateMealPlanItem: async (id, patch) => {
-    await updateMealPlanItem(id, patch);
+    await dbUpdateMealPlanItem(id, patch);
     await get().loadWeekPlan(get().plannerWeekOffset);
   },
 
   removeMealPlanItem: async (id) => {
-    await removeMealPlanItem(id);
+    await dbRemoveMealPlanItem(id);
     await get().loadWeekPlan(get().plannerWeekOffset);
   },
 
   loadWeekPlan: async (offset?: number) => {
     const off = offset ?? get().plannerWeekOffset;
     const weekStart = getWeekStart(off);
-    const entries = await loadMealPlan(weekStart);
+    const entries = await dbLoadMealPlan(weekStart);
     set({ mealPlan: entries, plannerWeekOffset: off });
   },
 
@@ -271,7 +298,7 @@ export const useStore = create<AppState>((set, get) => ({
   setFilter: (key, value) =>
     set((s) => ({ filters: { ...s.filters, [key]: value } })),
 
-  clearFilters: () => set({ filters: DEFAULT_FILTERS }),
+  clearFilters: () => set({ filters: { ...DEFAULT_FILTERS } }),
 
   setSidebarSection: (section) => {
     const view = section === "planner" ? "planner" : "library";
@@ -296,10 +323,13 @@ export function useFilteredRecipes() {
     base = base.filter((r) => r.collections.includes(collId));
   }
 
-  if (!filters.showArchived) base = base.filter((r) => !r.is_archived);
+  if (!filters.showArchived) {
+    base = base.filter((r) => !r.is_archived);
+  }
 
   if (filters.search.trim()) {
     const q = filters.search.toLowerCase();
+
     base = base.filter((r) => {
       const hay = [
         r.name,
@@ -324,12 +354,19 @@ export function useFilteredRecipes() {
   if (filters.isMealPrep) base = base.filter((r) => r.is_meal_prep);
   if (filters.isSpicy) base = base.filter((r) => r.is_spicy);
   if (filters.isFavouritesOnly) base = base.filter((r) => r.is_favorite);
-  if (filters.isQuick) base = base.filter((r) => r.total_time <= 30);
+  if (filters.isQuick) base = base.filter((r) => (Number(r.total_time) || 0) <= 30);
 
-  if (filters.maxTime < 100) {
-    const maxMs = Math.max(...recipes.map((r) => r.total_time), 1);
-    const limit = Math.round((filters.maxTime / 100) * maxMs);
-    base = base.filter((r) => r.total_time <= limit);
+  {
+    const datasetMaxTime = Math.max(
+      ...recipes.map((r) => Number(r.total_time) || 0),
+      0
+    );
+
+    const limit = Math.max(0, Number(filters.maxTime) || 0);
+
+    if (limit < datasetMaxTime) {
+      base = base.filter((r) => (Number(r.total_time) || 0) <= limit);
+    }
   }
 
   if (filters.minRating > 0) {
@@ -352,7 +389,7 @@ export function useFilteredRecipes() {
       base.sort((a, b) => (b.rating || 0) - (a.rating || 0));
       break;
     case "time":
-      base.sort((a, b) => a.total_time - b.total_time);
+      base.sort((a, b) => (Number(a.total_time) || 0) - (Number(b.total_time) || 0));
       break;
     case "cooked":
       base.sort((a, b) => {

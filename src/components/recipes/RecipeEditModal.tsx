@@ -7,46 +7,89 @@ interface IngRow { amt: string; unit: string; name: string; }
 interface StepRow { content: string; }
 
 export default function RecipeEditModal() {
-  const { recipes, editingId, closeEdit, saveRecipe } = useStore();
+  const { recipes, editingId, closeEdit, saveRecipe, deleteRecipe } = useStore();
   const recipe = editingId ? recipes.find(r => r.id === editingId) : null;
   const isNew = !recipe;
 
-  const [name, setName] = useState(recipe?.name ?? "");
-  const [emoji, setEmoji] = useState(recipe?.emoji ?? "");
-  const [desc, setDesc] = useState(recipe?.description ?? "");
-  const [cuisine, setCuisine] = useState(recipe?.cuisine ?? "");
-  const [mealType, setMealType] = useState(recipe?.meal_type ?? "Dinner");
-  const [servings, setServings] = useState(String(recipe?.servings ?? 4));
-  const [prep, setPrep] = useState(String(recipe?.prep_time ?? ""));
-  const [cook, setCook] = useState(String(recipe?.cook_time ?? ""));
-  const [cost, setCost] = useState(String(recipe?.total_cost ?? ""));
-  const [rating, setRating] = useState(recipe?.rating ?? 0);
-  const [notes, setNotes] = useState(recipe?.notes ?? "");
-  const [source, setSource] = useState(recipe?.source ?? "");
-  const [calories, setCalories] = useState(String(recipe?.calories ?? ""));
-  const [protein, setProtein] = useState(String(recipe?.protein_g ?? ""));
-  const [tags, setTags] = useState<string[]>(recipe?.tags ?? []);
+  const [name, setName] = useState("");
+  const [emoji, setEmoji] = useState("");
+  const [desc, setDesc] = useState("");
+  const [cuisine, setCuisine] = useState("");
+  const [mealType, setMealType] = useState("Dinner");
+  const [servings, setServings] = useState("4");
+  const [prep, setPrep] = useState("");
+  const [cook, setCook] = useState("");
+  const [cost, setCost] = useState("");
+  const [rating, setRating] = useState(0);
+  const [notes, setNotes] = useState("");
+  const [source, setSource] = useState("");
+  const [calories, setCalories] = useState("");
+  const [protein, setProtein] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
-  const [ings, setIngs] = useState<IngRow[]>(
-    recipe?.ingredients?.map(i => ({ amt: String(i.amount || ""), unit: i.unit, name: i.name })) ?? [{ amt: "", unit: "", name: "" }]
-  );
-  const [steps, setSteps] = useState<StepRow[]>(
-    recipe?.steps?.map(s => ({ content: s.content })) ?? [{ content: "" }]
-  );
+  const [ings, setIngs] = useState<IngRow[]>([{ amt: "", unit: "", name: "" }]);
+  const [steps, setSteps] = useState<StepRow[]>([{ content: "" }]);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Dietary
-  const [isVeg, setIsVeg] = useState(recipe?.is_vegetarian ?? false);
-  const [isVgn, setIsVgn] = useState(recipe?.is_vegan ?? false);
-  const [isGF, setIsGF] = useState(recipe?.is_gluten_free ?? false);
-  const [isDF, setIsDF] = useState(recipe?.is_dairy_free ?? false);
-  const [isHP, setIsHP] = useState(recipe?.is_high_protein ?? false);
-  const [isMP, setIsMP] = useState(recipe?.is_meal_prep ?? false);
-  const [isSp, setIsSp] = useState(recipe?.is_spicy ?? false);
+  const [isVeg, setIsVeg] = useState(false);
+  const [isVgn, setIsVgn] = useState(false);
+  const [isGF, setIsGF] = useState(false);
+  const [isDF, setIsDF] = useState(false);
+  const [isHP, setIsHP] = useState(false);
+  const [isMP, setIsMP] = useState(false);
+  const [isSp, setIsSp] = useState(false);
+
+  useEffect(() => {
+    setName(recipe?.name ?? "");
+    setEmoji(recipe?.emoji ?? "");
+    setDesc(recipe?.description ?? "");
+    setCuisine(recipe?.cuisine ?? "");
+    setMealType(recipe?.meal_type ?? "Dinner");
+    setServings(String(recipe?.servings ?? 4));
+    setPrep(String(recipe?.prep_time ?? ""));
+    setCook(String(recipe?.cook_time ?? ""));
+    setCost(String(recipe?.total_cost ?? ""));
+    setRating(recipe?.rating ?? 0);
+    setNotes(recipe?.notes ?? "");
+    setSource(recipe?.source ?? "");
+    setCalories(String(recipe?.calories ?? ""));
+    setProtein(String(recipe?.protein_g ?? ""));
+    setTags(recipe?.tags ?? []);
+    setTagInput("");
+    setConfirmDelete(false);
+    setIsDeleting(false);
+
+    setIngs(
+      recipe?.ingredients?.map(i => ({
+        amt: String(i.amount || ""),
+        unit: i.unit,
+        name: i.name,
+      })) ?? [{ amt: "", unit: "", name: "" }]
+    );
+
+    setSteps(
+      recipe?.steps?.map(s => ({ content: s.content })) ?? [{ content: "" }]
+    );
+
+    setIsVeg(recipe?.is_vegetarian ?? false);
+    setIsVgn(recipe?.is_vegan ?? false);
+    setIsGF(recipe?.is_gluten_free ?? false);
+    setIsDF(recipe?.is_dairy_free ?? false);
+    setIsHP(recipe?.is_high_protein ?? false);
+    setIsMP(recipe?.is_meal_prep ?? false);
+    setIsSp(recipe?.is_spicy ?? false);
+  }, [recipe?.id]);
 
   async function handleSave() {
-    if (!name.trim()) { alert("Recipe name is required."); return; }
+    if (!name.trim()) {
+      (window as any).__toast?.("Recipe name is required.");
+      return;
+    }
+
     const prepN = parseInt(prep) || 0;
     const cookN = parseInt(cook) || 0;
+
     const data: Partial<Recipe> = {
       ...(recipe ?? {}),
       id: recipe?.id,
@@ -76,16 +119,50 @@ export default function RecipeEditModal() {
       ingredients: ings
         .filter(i => i.name.trim())
         .map((i, idx) => ({
-          id: "", recipe_id: "", sort_order: idx, group_name: "",
-          name: i.name.trim(), amount: parseFloat(i.amt) || 0, unit: i.unit.trim(), notes: "",
+          id: "",
+          recipe_id: "",
+          sort_order: idx,
+          group_name: "",
+          name: i.name.trim(),
+          amount: parseFloat(i.amt) || 0,
+          unit: i.unit.trim(),
+          notes: "",
         })) as Ingredient[],
-      steps: steps.filter(s => s.content.trim()).map((s, idx) => ({
-        id: "", recipe_id: "", step_number: idx + 1, content: s.content.trim(),
-      })) as any,
+      steps: steps
+        .filter(s => s.content.trim())
+        .map((s, idx) => ({
+          id: "",
+          recipe_id: "",
+          step_number: idx + 1,
+          content: s.content.trim(),
+        })) as any,
     };
+
     await saveRecipe(data);
     (window as any).__toast?.(isNew ? "Recipe added!" : "Recipe updated!");
     closeEdit();
+  }
+
+  async function handleDelete() {
+    if (!recipe?.id || isDeleting) return;
+
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      (window as any).__toast?.("Click delete again to permanently remove this recipe.");
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      await deleteRecipe(recipe.id);
+      (window as any).__toast?.("Recipe deleted.");
+      closeEdit();
+    } catch (err) {
+      console.error(err);
+      (window as any).__toast?.("Could not delete recipe.");
+      setIsDeleting(false);
+      setConfirmDelete(false);
+    }
   }
 
   function addTag() {
@@ -95,7 +172,10 @@ export default function RecipeEditModal() {
   }
 
   function tagKeydown(e: React.KeyboardEvent) {
-    if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(); }
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addTag();
+    }
   }
 
   return (
@@ -107,7 +187,6 @@ export default function RecipeEditModal() {
         </div>
 
         <div className={styles.body}>
-          {/* Name + emoji */}
           <div className={styles.row}>
             <div className={styles.fg} style={{ flex: 3 }}>
               <label className={styles.label}>Recipe name *</label>
@@ -203,7 +282,7 @@ export default function RecipeEditModal() {
             {tags.map(t => (
               <span key={t} className={styles.tagItem}>
                 {t}
-                <button onClick={() => setTags(prev => prev.filter(x => x !== t))}>×</button>
+                <button type="button" onClick={() => setTags(prev => prev.filter(x => x !== t))}>×</button>
               </span>
             ))}
             <input
@@ -226,11 +305,11 @@ export default function RecipeEditModal() {
                 <input className={styles.input} value={ing.amt} onChange={e => setIngs(prev => prev.map((x,j) => j===i ? {...x,amt:e.target.value} : x))} placeholder="Qty" style={{ width: 56 }} />
                 <input className={styles.input} value={ing.unit} onChange={e => setIngs(prev => prev.map((x,j) => j===i ? {...x,unit:e.target.value} : x))} placeholder="Unit" style={{ width: 60 }} />
                 <input className={styles.input} value={ing.name} onChange={e => setIngs(prev => prev.map((x,j) => j===i ? {...x,name:e.target.value} : x))} placeholder="Ingredient name" style={{ flex: 1 }} />
-                <button className={styles.removeBtn} onClick={() => setIngs(prev => prev.filter((_,j) => j!==i))}>×</button>
+                <button type="button" className={styles.removeBtn} onClick={() => setIngs(prev => prev.filter((_,j) => j!==i))}>×</button>
               </div>
             ))}
           </div>
-          <button className={styles.addRowBtn} onClick={() => setIngs(prev => [...prev, { amt: "", unit: "", name: "" }])}>+ Add ingredient</button>
+          <button type="button" className={styles.addRowBtn} onClick={() => setIngs(prev => [...prev, { amt: "", unit: "", name: "" }])}>+ Add ingredient</button>
 
           <hr className="sect-hr" />
 
@@ -246,11 +325,11 @@ export default function RecipeEditModal() {
                   placeholder={`Step ${i+1}…`}
                   rows={2}
                 />
-                <button className={styles.removeBtn} onClick={() => setSteps(prev => prev.filter((_,j) => j!==i))}>×</button>
+                <button type="button" className={styles.removeBtn} onClick={() => setSteps(prev => prev.filter((_,j) => j!==i))}>×</button>
               </div>
             ))}
           </div>
-          <button className={styles.addRowBtn} onClick={() => setSteps(prev => [...prev, { content: "" }])}>+ Add step</button>
+          <button type="button" className={styles.addRowBtn} onClick={() => setSteps(prev => [...prev, { content: "" }])}>+ Add step</button>
 
           <hr className="sect-hr" />
 
@@ -261,10 +340,25 @@ export default function RecipeEditModal() {
         </div>
 
         <div className={styles.footer}>
-          <button className={styles.cancelBtn} onClick={closeEdit}>Cancel</button>
-          <button className={styles.saveBtn} onClick={handleSave}>
-            {isNew ? "Add Recipe" : "Save Changes"}
-          </button>
+          <div className={styles.footerLeft}>
+            {!isNew && (
+              <button
+                type="button"
+                className={styles.deleteBtn}
+                onClick={handleDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting..." : confirmDelete ? "Click Again to Delete" : "Delete Recipe"}
+              </button>
+            )}
+          </div>
+
+          <div className={styles.footerRight}>
+            <button type="button" className={styles.cancelBtn} onClick={closeEdit}>Cancel</button>
+            <button type="button" className={styles.saveBtn} onClick={handleSave}>
+              {isNew ? "Add Recipe" : "Save Changes"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

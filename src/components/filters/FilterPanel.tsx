@@ -1,29 +1,108 @@
+import { useEffect, useMemo } from "react";
 import { useStore } from "@/store";
 import { SortOption } from "@/types";
 import styles from "./FilterPanel.module.css";
 
 interface Props {
-  allCuisines: string[];
-  allTags: string[];
-  maxRecipeTime: number;
+  allCuisines?: string[];
+  allTags?: string[];
+  maxRecipeTime?: number;
 }
 
-export default function FilterPanel({ allCuisines, allTags, maxRecipeTime }: Props) {
-  const { filters, setFilter, clearFilters } = useStore();
+export default function FilterPanel(_: Props) {
+  const { recipes, filters, setFilter, clearFilters } = useStore();
 
-  const timeLabel = filters.maxTime >= 100
-    ? "Any"
-    : `${Math.round((filters.maxTime / 100) * maxRecipeTime)}m`;
+  const filterSourceRecipes = useMemo(
+    () => recipes.filter(r => !r.is_archived),
+    [recipes]
+  );
+
+  const allCuisines = useMemo(() => {
+    return [...new Set(
+      filterSourceRecipes
+        .map(r => (r.cuisine ?? "").trim())
+        .filter(Boolean)
+    )].sort((a, b) => a.localeCompare(b));
+  }, [filterSourceRecipes]);
+
+  const allTags = useMemo(() => {
+    return [...new Set(
+      filterSourceRecipes
+        .flatMap(r => r.tags ?? [])
+        .map(tag => tag.trim())
+        .filter(Boolean)
+    )].sort((a, b) => a.localeCompare(b));
+  }, [filterSourceRecipes]);
+
+  const maxRecipeTime = useMemo(() => {
+    const times = filterSourceRecipes
+      .map(r => Number(r.total_time) || 0)
+      .filter(t => t > 0);
+
+    return times.length > 0 ? Math.max(...times) : 30;
+  }, [filterSourceRecipes]);
+
+  const sliderMax = useMemo(() => {
+    return Math.max(1, Math.ceil(maxRecipeTime));
+  }, [maxRecipeTime]);
+
+  const rawMaxTime = Number(filters.maxTime);
+
+  const safeMaxTime = useMemo(() => {
+    if (!Number.isFinite(rawMaxTime)) return sliderMax;
+    if (rawMaxTime < 0) return 0;
+    if (rawMaxTime > sliderMax) return sliderMax;
+    return Math.round(rawMaxTime);
+  }, [rawMaxTime, sliderMax]);
+
+  const timeLabel = safeMaxTime >= sliderMax ? "Any" : `${safeMaxTime}m`;
 
   function toggleArr<T>(arr: T[], val: T): T[] {
     return arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val];
   }
 
+  useEffect(() => {
+    const validTags = filters.tags.filter(tag => allTags.includes(tag));
+    if (validTags.length !== filters.tags.length) {
+      setFilter("tags", validTags);
+    }
+
+    const validCuisines = filters.cuisines.filter(cuisine => allCuisines.includes(cuisine));
+    if (validCuisines.length !== filters.cuisines.length) {
+      setFilter("cuisines", validCuisines);
+    }
+  }, [allTags, allCuisines, filters.tags, filters.cuisines, setFilter]);
+
+  useEffect(() => {
+    if (!Number.isFinite(rawMaxTime)) {
+      setFilter("maxTime", sliderMax);
+      return;
+    }
+
+    // Old setup used 100 as "Any". If the dataset max is now above 100,
+    // treat that legacy value as the new max.
+    if (rawMaxTime === 100 && sliderMax > 100) {
+      setFilter("maxTime", sliderMax);
+      return;
+    }
+
+    if (rawMaxTime < 0) {
+      setFilter("maxTime", 0);
+      return;
+    }
+
+    if (rawMaxTime > sliderMax) {
+      setFilter("maxTime", sliderMax);
+    }
+  }, [rawMaxTime, sliderMax, setFilter]);
+
   return (
     <aside className={styles.panel}>
       <div className={styles.header}>
         <span>Filters</span>
-        <button className={styles.closeBtn} onClick={clearFilters}>Clear all</button>
+        <button type="button" className={styles.closeBtn} onClick={clearFilters}>
+          Clear all
+        </button>
       </div>
 
       <div className={styles.section}>
@@ -67,8 +146,11 @@ export default function FilterPanel({ allCuisines, allTags, maxRecipeTime }: Pro
         <div className={styles.label}>Max total time</div>
         <div className={styles.sliderRow}>
           <input
-            type="range" min={0} max={100} step={1}
-            value={filters.maxTime}
+            type="range"
+            min={0}
+            max={sliderMax}
+            step={1}
+            value={safeMaxTime}
             onChange={e => setFilter("maxTime", Number(e.target.value))}
             className={styles.slider}
           />
@@ -82,6 +164,7 @@ export default function FilterPanel({ allCuisines, allTags, maxRecipeTime }: Pro
           <div className={styles.pills}>
             {allCuisines.map(c => (
               <button
+                type="button"
                 key={c}
                 className={`${styles.pill} ${filters.cuisines.includes(c) ? styles.pillOn : ""}`}
                 onClick={() => setFilter("cuisines", toggleArr(filters.cuisines, c))}
@@ -99,6 +182,7 @@ export default function FilterPanel({ allCuisines, allTags, maxRecipeTime }: Pro
           <div className={styles.pills}>
             {allTags.map(t => (
               <button
+                type="button"
                 key={t}
                 className={`${styles.pill} ${filters.tags.includes(t) ? styles.pillOn : ""}`}
                 onClick={() => setFilter("tags", toggleArr(filters.tags, t))}
@@ -113,12 +197,14 @@ export default function FilterPanel({ allCuisines, allTags, maxRecipeTime }: Pro
       <div className={styles.section}>
         <div className={styles.label}>Min rating</div>
         <div className={styles.stars}>
-          {[1,2,3,4,5].map(n => (
+          {[1, 2, 3, 4, 5].map(n => (
             <span
               key={n}
               className={`star ${filters.minRating >= n ? "on" : ""}`}
               onClick={() => setFilter("minRating", filters.minRating === n ? 0 : n)}
-            >★</span>
+            >
+              ★
+            </span>
           ))}
         </div>
       </div>

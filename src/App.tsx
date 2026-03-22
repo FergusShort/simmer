@@ -15,8 +15,8 @@ export default function App() {
   const toastRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    init();
-    // Expose toast globally for convenience
+    void init();
+
     (window as any).__toast = (msg: string) => {
       const el = toastRef.current;
       if (!el) return;
@@ -24,7 +24,7 @@ export default function App() {
       el.classList.add("show");
       setTimeout(() => el.classList.remove("show"), 2200);
     };
-  }, []);
+  }, [init]);
 
   return (
     <div className={styles.app}>

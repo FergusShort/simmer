@@ -203,26 +203,310 @@ fn capitalise(s: &str) -> String {
 }
 
 fn pick_emoji(cuisine: &str, meal_type: &str, name: &str) -> String {
-    let n = name.to_lowercase();
-    let c = cuisine.to_lowercase();
-    if n.contains("pasta") || n.contains("carbonara") || n.contains("spaghetti") { return "🍝".to_string(); }
-    if n.contains("curry") { return "🍛".to_string(); }
-    if n.contains("burger") { return "🍔".to_string(); }
-    if n.contains("pizza") { return "🍕".to_string(); }
-    if n.contains("salad") { return "🥗".to_string(); }
-    if n.contains("soup") || n.contains("stew") { return "🍲".to_string(); }
-    if n.contains("chicken") { return "🍗".to_string(); }
-    if n.contains("fish") || n.contains("salmon") || n.contains("tuna") { return "🐟".to_string(); }
-    if n.contains("taco") || n.contains("burrito") { return "🌮".to_string(); }
-    if n.contains("cake") || n.contains("cookie") || n.contains("brownie") { return "🍰".to_string(); }
-    if n.contains("oat") || n.contains("porridge") { return "🫙".to_string(); }
-    if n.contains("egg") || n.contains("omelette") { return "🍳".to_string(); }
-    if meal_type == "Breakfast" { return "🍳".to_string(); }
-    if meal_type == "Dessert" { return "🍰".to_string(); }
-    if meal_type == "Drink" { return "🥤".to_string(); }
-    if c.contains("thai") || c.contains("japanese") || c.contains("asian") { return "🍜".to_string(); }
-    if c.contains("italian") { return "🍝".to_string(); }
-    if c.contains("mexican") { return "🌮".to_string(); }
+    let normalize = |s: &str| -> String {
+        s.to_lowercase()
+            .chars()
+            .map(|ch| if ch.is_alphanumeric() { ch } else { ' ' })
+            .collect::<String>()
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+    };
+
+    let n = format!(" {} ", normalize(name));
+    let c = format!(" {} ", normalize(cuisine));
+    let m = format!(" {} ", normalize(meal_type));
+    let full = format!("{n}{c}{m}");
+
+    let has = |haystack: &str, term: &str| -> bool {
+        let t = normalize(term);
+        !t.is_empty() && haystack.contains(&format!(" {} ", t))
+    };
+
+    let has_any = |haystack: &str, terms: &[&str]| -> bool {
+        terms.iter().any(|term| has(haystack, term))
+    };
+
+    // ---------- Drinks ----------
+    if has_any(&full, &[
+        "smoothie", "milkshake", "shake", "protein shake", "juice", "lemonade",
+        "soda", "soft drink", "fizz", "mocktail", "cocktail", "drink",
+    ]) {
+        return "🥤".to_string();
+    }
+    if has_any(&full, &[
+        "coffee", "iced coffee", "latte", "flat white", "cappuccino",
+        "espresso", "americano", "mocha",
+    ]) {
+        return "☕".to_string();
+    }
+    if has_any(&full, &[
+        "tea", "chai", "matcha", "green tea", "black tea", "herbal tea",
+    ]) {
+        return "🫖".to_string();
+    }
+
+    // ---------- Desserts / sweets ----------
+    if has_any(&full, &[
+        "cake", "cheesecake", "gateau", "tiramisu", "brownie", "blondie",
+        "slice", "lamington",
+    ]) {
+        return "🍰".to_string();
+    }
+    if has_any(&full, &[
+        "cookie", "cookies", "biscuit", "biscuits", "shortbread",
+    ]) {
+        return "🍪".to_string();
+    }
+    if has_any(&full, &[
+        "cupcake", "muffin", "muffins",
+    ]) {
+        return "🧁".to_string();
+    }
+    if has_any(&full, &[
+        "donut", "donuts", "doughnut", "doughnuts",
+    ]) {
+        return "🍩".to_string();
+    }
+    if has_any(&full, &[
+        "ice cream", "gelato", "sorbet", "sundae", "froyo", "frozen yoghurt",
+        "frozen yogurt",
+    ]) {
+        return "🍨".to_string();
+    }
+    if has_any(&full, &[
+        "pie", "pies", "tart", "tarts", "quiche", "galette", "empanada",
+    ]) {
+        return "🥧".to_string();
+    }
+    if has_any(&full, &[
+        "chocolate", "fudge", "truffle", "truffles", "lolly", "lollies",
+        "candy", "caramel",
+    ]) {
+        return "🍫".to_string();
+    }
+    if has(&m, "dessert") {
+        return "🍰".to_string();
+    }
+
+    // ---------- Breakfast ----------
+    if has_any(&full, &[
+        "pancake", "pancakes", "waffle", "waffles", "crepe", "crepes",
+        "french toast",
+    ]) {
+        return "🥞".to_string();
+    }
+    if has_any(&full, &[
+        "egg", "eggs", "omelette", "omelet", "frittata", "shakshuka",
+        "scramble", "scrambled eggs",
+    ]) {
+        return "🍳".to_string();
+    }
+    if has_any(&full, &[
+        "oat", "oats", "oatmeal", "porridge", "overnight oats", "granola",
+        "muesli", "cereal",
+    ]) {
+        return "🥣".to_string();
+    }
+    if has_any(&full, &[
+        "croissant", "pastry", "danish", "scone",
+    ]) {
+        return "🥐".to_string();
+    }
+    if has(&m, "breakfast") {
+        return "🍳".to_string();
+    }
+
+    // ---------- Soups / bowls / sauces ----------
+    if has_any(&full, &[
+        "soup", "stew", "chowder", "bisque", "broth", "chili", "casserole",
+        "gumbo",
+    ]) {
+        return "🍲".to_string();
+    }
+    if has_any(&full, &[
+        "salad", "grain bowl", "bowl", "poke", "poke bowl", "buddha bowl",
+        "power bowl",
+    ]) {
+        return "🥗".to_string();
+    }
+    if has_any(&full, &[
+        "sauce", "salsa", "dip", "pesto", "dressing", "marinade", "jam",
+        "jelly", "chutney", "aioli", "mayo", "mayonnaise", "gravy", "relish",
+    ]) {
+        return "🫙".to_string();
+    }
+
+    // ---------- Handhelds / fast food ----------
+    if has_any(&full, &[
+        "burger", "burgers", "cheeseburger", "slider", "sliders",
+    ]) {
+        return "🍔".to_string();
+    }
+    if has_any(&full, &[
+        "sandwich", "sandwiches", "toastie", "toasties", "panini", "melt",
+        "sub", "bagel", "bagels", "roll", "rolls", "wrap", "wraps",
+    ]) {
+        return "🥪".to_string();
+    }
+    if has_any(&full, &[
+        "hot dog", "hot dogs", "hotdog", "hotdogs",
+    ]) {
+        return "🌭".to_string();
+    }
+    if has_any(&full, &[
+        "taco", "tacos", "quesadilla", "quesadillas", "fajita", "fajitas",
+        "nachos",
+    ]) {
+        return "🌮".to_string();
+    }
+    if has_any(&full, &[
+        "burrito", "burritos", "chimichanga",
+    ]) {
+        return "🌯".to_string();
+    }
+    if has_any(&full, &[
+        "kebab", "kebabs", "shawarma", "gyro", "gyros", "falafel", "pita",
+        "hummus",
+    ]) {
+        return "🥙".to_string();
+    }
+
+    // ---------- Pizza / bread / bakery ----------
+    if has_any(&full, &[
+        "pizza", "flatbread", "pide",
+    ]) {
+        return "🍕".to_string();
+    }
+    if has_any(&full, &[
+        "bread", "toast", "focaccia", "sourdough", "loaf", "brioche", "bun",
+        "buns",
+    ]) {
+        return "🍞".to_string();
+    }
+
+    // ---------- Pasta / noodles / rice / sushi / dumplings ----------
+    if has_any(&full, &[
+        "pasta", "spaghetti", "carbonara", "linguine", "fettuccine", "penne",
+        "rigatoni", "macaroni", "lasagna", "lasagne", "ravioli", "tortellini",
+        "gnocchi", "alfredo", "bolognese", "mac and cheese", "mac n cheese",
+    ]) {
+        return "🍝".to_string();
+    }
+    if has_any(&full, &[
+        "ramen", "udon", "soba", "pho", "laksa", "lo mein", "chow mein",
+        "yakisoba", "noodle", "noodles",
+    ]) {
+        return "🍜".to_string();
+    }
+    if has_any(&full, &[
+        "sushi", "sashimi", "nigiri", "maki", "california roll", "dragon roll",
+    ]) {
+        return "🍣".to_string();
+    }
+    if has_any(&full, &[
+        "dumpling", "dumplings", "gyoza", "wonton", "potsticker", "bao",
+        "dim sum", "mandu",
+    ]) {
+        return "🥟".to_string();
+    }
+    if has_any(&full, &[
+        "rice", "fried rice", "risotto", "paella", "biryani", "pilaf",
+        "pulao", "jambalaya", "bibimbap",
+    ]) {
+        return "🍚".to_string();
+    }
+    if has_any(&full, &[
+        "curry", "korma", "tikka masala", "vindaloo", "butter chicken",
+        "dal", "dahl",
+    ]) {
+        return "🍛".to_string();
+    }
+
+    // ---------- Proteins / mains ----------
+    if has_any(&full, &[
+        "chicken", "wings", "wing", "drumstick", "drumsticks",
+    ]) {
+        return "🍗".to_string();
+    }
+    if has_any(&full, &[
+        "fish", "salmon", "tuna", "trout", "cod", "snapper", "sea bass",
+        "barramundi",
+    ]) {
+        return "🐟".to_string();
+    }
+    if has_any(&full, &[
+        "prawn", "prawns", "shrimp", "shrimps", "scampi",
+    ]) {
+        return "🍤".to_string();
+    }
+    if has_any(&full, &[
+        "steak", "beef", "lamb", "meatball", "meatballs", "brisket", "veal",
+    ]) {
+        return "🥩".to_string();
+    }
+    if has_any(&full, &[
+        "pork", "ribs", "rib", "bacon", "ham", "pulled pork",
+    ]) {
+        return "🍖".to_string();
+    }
+
+    // ---------- Sides / snacks ----------
+    if has_any(&full, &[
+        "fries", "chips", "wedges", "hash brown", "hash browns",
+    ]) {
+        return "🍟".to_string();
+    }
+    if has_any(&full, &[
+        "popcorn",
+    ]) {
+        return "🍿".to_string();
+    }
+    if has(&m, "snack") {
+        return "🍿".to_string();
+    }
+
+    // ---------- Meal type fallback ----------
+    if has(&m, "drink") {
+        return "🥤".to_string();
+    }
+    if has(&m, "dessert") {
+        return "🍰".to_string();
+    }
+    if has(&m, "breakfast") {
+        return "🍳".to_string();
+    }
+
+    // ---------- Cuisine / country flag fallback ----------
+    if has_any(&c, &["italian"]) { return "🇮🇹".to_string(); }
+    if has_any(&c, &["mexican", "tex mex"]) { return "🇲🇽".to_string(); }
+    if has_any(&c, &["american"]) { return "🇺🇸".to_string(); }
+    if has_any(&c, &["indian"]) { return "🇮🇳".to_string(); }
+    if has_any(&c, &["thai"]) { return "🇹🇭".to_string(); }
+    if has_any(&c, &["japanese"]) { return "🇯🇵".to_string(); }
+    if has_any(&c, &["chinese"]) { return "🇨🇳".to_string(); }
+    if has_any(&c, &["korean"]) { return "🇰🇷".to_string(); }
+    if has_any(&c, &["vietnamese"]) { return "🇻🇳".to_string(); }
+    if has_any(&c, &["french"]) { return "🇫🇷".to_string(); }
+    if has_any(&c, &["spanish"]) { return "🇪🇸".to_string(); }
+    if has_any(&c, &["greek"]) { return "🇬🇷".to_string(); }
+    if has_any(&c, &["turkish"]) { return "🇹🇷".to_string(); }
+    if has_any(&c, &["lebanese"]) { return "🇱🇧".to_string(); }
+    if has_any(&c, &["moroccan"]) { return "🇲🇦".to_string(); }
+    if has_any(&c, &["ethiopian"]) { return "🇪🇹".to_string(); }
+    if has_any(&c, &["brazilian"]) { return "🇧🇷".to_string(); }
+    if has_any(&c, &["argentinian", "argentine"]) { return "🇦🇷".to_string(); }
+    if has_any(&c, &["peruvian"]) { return "🇵🇪".to_string(); }
+    if has_any(&c, &["jamaican"]) { return "🇯🇲".to_string(); }
+    if has_any(&c, &["cuban"]) { return "🇨🇺".to_string(); }
+    if has_any(&c, &["portuguese"]) { return "🇵🇹".to_string(); }
+    if has_any(&c, &["german"]) { return "🇩🇪".to_string(); }
+    if has_any(&c, &["polish"]) { return "🇵🇱".to_string(); }
+    if has_any(&c, &["irish"]) { return "🇮🇪".to_string(); }
+    if has_any(&c, &["british", "english", "uk"]) { return "🇬🇧".to_string(); }
+    if has_any(&c, &["australian", "aussie"]) { return "🇦🇺".to_string(); }
+    if has_any(&c, &["new zealand", "kiwi", "nz"]) { return "🇳🇿".to_string(); }
+
     "🍽️".to_string()
 }
 
