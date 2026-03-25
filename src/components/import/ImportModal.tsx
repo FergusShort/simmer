@@ -16,7 +16,8 @@ Output clean Markdown only — no commentary, no preamble.
 - ALSO IF THE RECIPE INCLUDES MULTIPLE THING E.G A MAIN AND A SIDE HAVE THEM BOTH THERE BUT JUST CHANGE THE TITLE, AND PUT ALL THE INGREDIENTS IN ONE PLACE
 - ALSO IF ITS LIKE 1 1/2 tsp JUST WRITE 1.5 TSP, OR IF ITS LIKE A RANGE 1-2 TSP JUST WRITE 1.5 TSP or WHATEVER YOU THINK IS MOST LIKELY, BUT DONT LEAVE IT AS A RANGE OR FRACTION BECAUSE THE APP WONT BE ABLE TO PARSE IT
 - ALSO FOR TAGS DON'T MAKE IT SUPER SPECIFIC, JUST PUT LIKE "SPICY" OR "COMFORT FOOD" OR "MEAL PREP" OR "HIGH PROTEIN" OR WHATEVER, DONT MAKE IT SUPER NARROW LIKE "SPICY BUT NOT TOO SPICY FOR MOST PEOPLE" OR "MEAL PREP BUT ONLY IF YOU HAVE A LOT OF TIME ON YOUR HANDS TO COOK IT BECAUSE ITS KINDA COMPLICATED", JUST MAKE IT BROAD AND SIMPLE OR SOMETHING LIKE BURRITOS ETC ETC JUST MAKE SIMPLE AND ONLY PUT TWO - THREE TAGS IF NECESSARY AND FOUR IF REALLY NECESSARY
----
+- For fruit and veg, remove size words like large, medium, or small, and avoid grams where possible. Write them as simple countable ingredients like 1 onion, 2 carrots, or 3 tomatoes so the app can parse them more reliably. For meat, dairy, and packaged goods, keep grams or ml when that is clearer and more accurate, like 200g chicken breast or 250ml cream.
+- Do not include basic cooking staples in the ingredients list or cost estimate when they are only used incidentally, such as oil for frying, water for boiling, or light salt and pepper seasoning. Assume I already have those. Only include them when they are a real measured ingredient in the recipe, such as 1 tbsp olive oil in a dressing or 1 tsp salt in the mixture.
 name: [Recipe name]
 description: [1-2 sentences]
 servings: [number]
